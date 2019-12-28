@@ -21,8 +21,9 @@ var (
 
 func NewRouter() *gin.Engine {
 	r := gin.Default()
-    config := cors.DefaultConfig()
-    config.AllowOrigins = []string{"*"}
+	config := cors.DefaultConfig()
+	config.AllowOrigins = []string{"*"}
+	config.ExposeHeaders = []string{"Content-Length", "Location"}
 	r.Use(cors.New(config))
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
@@ -35,6 +36,7 @@ func NewRouter() *gin.Engine {
 	r.GET("/games/:gameId", getGame)
 	r.GET("/ws/games/:gameId", subscribe)
 	r.POST("/games/:gameId/start", startGame)
+	r.POST("/games/:gameId/next", next)
 	r.GET("/games/:gameId/prompts/:promptId", getPrompt)
 	r.POST("/games/:gameId/prompts/:promptId/response", submitResponse)
 	r.POST("/games/:gameId/prompts/:promptId/vote", vote)
@@ -284,4 +286,34 @@ func vote(ctx *gin.Context) {
 	if sum == len(g.PlayerIDs) {
 		g.PublishVotes(p.Votes)
 	}
+}
+
+func next(ctx *gin.Context) {
+	gameId := ctx.Param("gameId")
+	if gameId == "" {
+		panic("game id should never be null")
+	}
+
+	g, err := games.Get(gameId)
+	if err != nil {
+		panic(err)
+	} else if g == nil {
+		errMsg := fmt.Sprintf("game id %s does not exist", gameId)
+		ctx.JSON(http.StatusNotFound, gin.H{"error": errMsg})
+		return
+	}
+
+	if len(g.PromptIDs)%5 == 0 {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "not implemented"})
+		return
+	}
+
+	p, err := prompts.New()
+	if err != nil {
+		panic(err)
+	}
+	g.PromptIDs = append(g.PromptIDs, p.ID)
+	games.Update(gameId, g)
+
+	g.PublishPrompt(p.ID, p.Text)
 }
