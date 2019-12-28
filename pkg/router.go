@@ -82,6 +82,8 @@ func joinGame(ctx *gin.Context) {
 		panic(err)
 	}
 
+	g.PublishJoined(req.PlayerID)
+
 	leader := true
 	if len(g.PlayerIDs) > 1 {
 		leader = false
@@ -156,7 +158,7 @@ func startGame(ctx *gin.Context) {
 	g.PromptIDs = []string{p.ID}
 	games.Update(id, g)
 
-	g.PublishPrompt(p.Text)
+	g.PublishPrompt(p.ID, p.Text)
 }
 
 func getPrompt(ctx *gin.Context) {

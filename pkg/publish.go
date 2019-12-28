@@ -15,12 +15,14 @@ func (g *Game) PublishJoined(playerID string) {
 
 type PromptMsg struct {
 	Type   string `json:"type"`
+	ID     string `json:"id"`
 	Prompt string `json:"prompt"`
 }
 
-func (g *Game) PublishPrompt(text string) {
+func (g *Game) PublishPrompt(id, text string) {
 	msg := &PromptMsg{
 		Type:   "prompt",
+		ID:     id,
 		Prompt: text,
 	}
 	g.Publish(msg)
