@@ -304,7 +304,7 @@ func next(ctx *gin.Context) {
 	}
 
 	if len(g.PromptIDs)%5 == 0 {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "not implemented"})
+		g.PublishEnd(g.ID)
 		return
 	}
 

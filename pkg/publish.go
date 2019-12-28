@@ -53,3 +53,16 @@ func (g *Game) PublishVotes(votes map[string]int) {
 	}
 	g.Publish(msg)
 }
+
+type EndMsg struct {
+	Type string `json:"type"`
+	ID   string `json:"id"`
+}
+
+func (g *Game) PublishEnd(ID string) {
+	msg := &EndMsg{
+		Type: "end",
+		ID:   ID,
+	}
+	g.Publish(msg)
+}
