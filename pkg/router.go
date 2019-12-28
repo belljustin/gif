@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	ws "github.com/gorilla/websocket"
 )
@@ -20,6 +21,9 @@ var (
 
 func NewRouter() *gin.Engine {
 	r := gin.Default()
+    config := cors.DefaultConfig()
+    config.AllowOrigins = []string{"*"}
+	r.Use(cors.New(config))
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "pong",
