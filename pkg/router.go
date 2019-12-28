@@ -1,7 +1,7 @@
 package pkg
 
 import (
-	"encoding/json"
+	_ "encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -29,8 +29,9 @@ func NewRouter() *gin.Engine {
 	r.POST("/games", createGame)
 	r.POST("/games/:gameId", joinGame)
 	r.GET("/games/:gameId", getGame)
-	r.Any("/ws/games/:gameId", subscribe)
+	r.GET("/ws/games/:gameId", subscribe)
 	r.POST("/games/:gameId/start", startGame)
+	r.GET("/games/:gameId/prompts/:promptId", getPrompt)
 	r.POST("/games/:gameId/prompts/:promptId/response", submitResponse)
 	r.POST("/games/:gameId/prompts/:promptId/vote", vote)
 
@@ -133,11 +134,6 @@ func subscribe(ctx *gin.Context) {
 	}
 }
 
-type PromptMsg struct {
-	Type   string `json:"type"`
-	Prompt string `json:"prompt"`
-}
-
 func startGame(ctx *gin.Context) {
 	id := ctx.Param("gameId")
 	if id == "" {
@@ -157,26 +153,33 @@ func startGame(ctx *gin.Context) {
 	if err != nil {
 		panic(err)
 	}
-	g.PlayerIDs = []string{p.ID}
+	g.PromptIDs = []string{p.ID}
 	games.Update(id, g)
 
-	msg := &PromptMsg{Type: "prompt", Prompt: p.Text}
-	b, err := json.Marshal(msg)
+	g.PublishPrompt(p.Text)
+}
+
+func getPrompt(ctx *gin.Context) {
+	promptId := ctx.Param("promptId")
+	if promptId == "" {
+		panic("game id should never be null")
+	}
+
+	p, err := prompts.Get(promptId)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		panic(err)
+	} else if p == nil {
+		errMsg := fmt.Sprintf("prompt id %s does not exist", promptId)
+		ctx.JSON(http.StatusNotFound, gin.H{"error": errMsg})
 		return
 	}
-	g.Publish(b)
+
+	ctx.JSON(http.StatusOK, p)
 }
 
 type SubmitResponseReq struct {
 	PlayerID string `json:"player_id"`
 	Response string `json:"response"`
-}
-
-type ResponsesSubmittedMsg struct {
-	Type      string            `json:"type"`
-	Responses map[string]string `json:"responses"`
 }
 
 func submitResponse(ctx *gin.Context) {
@@ -220,23 +223,12 @@ func submitResponse(ctx *gin.Context) {
 	}
 
 	if len(p.Responses) == len(g.PlayerIDs) {
-		msg := &ResponsesSubmittedMsg{Type: "responses_submitted", Responses: p.Responses}
-		b, err := json.Marshal(msg)
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		g.Publish(b)
+		g.PublishResponses(p.Responses)
 	}
 }
 
 type SubmitVoteReq struct {
 	Vote string `json:"vote"`
-}
-
-type VotesSubmittedMsg struct {
-	Type  string         `json:"type"`
-	Votes map[string]int `json:"votes"`
 }
 
 func vote(ctx *gin.Context) {
@@ -284,16 +276,6 @@ func vote(ctx *gin.Context) {
 		sum += v
 	}
 	if sum == len(g.PlayerIDs) {
-		msg := &VotesSubmittedMsg{
-			Type:  "votes_submitted",
-			Votes: p.Votes,
-		}
-
-		b, err := json.Marshal(msg)
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		g.Publish(b)
+		g.PublishVotes(p.Votes)
 	}
 }

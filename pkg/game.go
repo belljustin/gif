@@ -1,7 +1,7 @@
 package pkg
 
 import (
-	_ "encoding/json"
+	"encoding/json"
 	"log"
 	"math/rand"
 	"strings"
@@ -70,9 +70,13 @@ func generateGameId(n int) string {
 	return b.String() // E.g. "ExcbsVQs"
 }
 
-func (g *Game) Publish(msg []byte) {
+func (g *Game) Publish(msg interface{}) {
+	b, err := json.Marshal(msg)
+	if err != nil {
+		panic(err)
+	}
 	for _, c := range g.Conns {
-		go publish(c, msg)
+		go publish(c, b)
 	}
 }
 
@@ -89,10 +93,10 @@ func publish(conn ws.Conn, msg []byte) {
 }
 
 type Prompt struct {
-	ID        string
-	Text      string
-	Responses map[string]string
-	Votes     map[string]int
+	ID        string            `json:"id"`
+	Text      string            `json:"text"`
+	Responses map[string]string `json:"responses"`
+	Votes     map[string]int    `json:"votes"`
 }
 
 type PromptStore interface {
