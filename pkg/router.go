@@ -229,7 +229,7 @@ func submitResponse(ctx *gin.Context) {
 	}
 
 	if len(p.Responses) == len(g.PlayerIDs) {
-		g.PublishResponses(p.Responses)
+		g.PublishResponses(p.Responses, promptId)
 	}
 }
 
@@ -282,6 +282,6 @@ func vote(ctx *gin.Context) {
 		sum += v
 	}
 	if sum == len(g.PlayerIDs) {
-		g.PublishVotes(p.Votes)
+		g.PublishVotes(p.Votes, promptId)
 	}
 }
