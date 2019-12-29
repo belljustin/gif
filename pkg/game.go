@@ -29,6 +29,23 @@ type Game struct {
 	PromptIDs []string  `json:"prompt_ids"`
 }
 
+func (g *Game) Scores() map[string]int {
+	scores := make(map[string]int)
+	for _, promptID := range g.PromptIDs {
+		p, err := prompts.Get(promptID)
+		if err != nil {
+			panic(err)
+		}
+		for k, v := range p.Votes {
+			if _, ok := scores[k]; !ok {
+				scores[k] = 0
+			}
+			scores[k] += v
+		}
+	}
+	return scores
+}
+
 type MemGameStore struct {
 	store map[string]Game
 }

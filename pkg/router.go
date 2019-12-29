@@ -97,6 +97,11 @@ func joinGame(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"leader": leader})
 }
 
+type GetGameResponse struct {
+	Game
+	Scores map[string]int `json:"scores"`
+}
+
 func getGame(ctx *gin.Context) {
 	id := ctx.Param("gameId")
 	if id == "" {
@@ -112,7 +117,7 @@ func getGame(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, g)
+	ctx.JSON(http.StatusOK, &GetGameResponse{*g, g.Scores()})
 }
 
 func subscribe(ctx *gin.Context) {
