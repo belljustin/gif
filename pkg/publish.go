@@ -31,12 +31,14 @@ func (g *Game) PublishPrompt(id, text string) {
 type ResponsesSubmittedMsg struct {
 	Type      string            `json:"type"`
 	Responses map[string]string `json:"responses"`
+    ID        string            `json:"id"`
 }
 
-func (g *Game) PublishResponses(responses map[string]string) {
+func (g *Game) PublishResponses(responses map[string]string, promptID string) {
 	msg := &ResponsesSubmittedMsg{
 		Type:      "responses_submitted",
 		Responses: responses,
+        ID:        promptID,
 	}
 	g.Publish(msg)
 }
@@ -44,12 +46,14 @@ func (g *Game) PublishResponses(responses map[string]string) {
 type VotesSubmittedMsg struct {
 	Type  string         `json:"type"`
 	Votes map[string]int `json:"votes"`
+    ID    string         `json:"id"`
 }
 
-func (g *Game) PublishVotes(votes map[string]int) {
+func (g *Game) PublishVotes(votes map[string]int, promptID string) {
 	msg := &VotesSubmittedMsg{
 		Type:  "votes_submitted",
 		Votes: votes,
+        ID: promptID,
 	}
 	g.Publish(msg)
 }
