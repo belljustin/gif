@@ -17,9 +17,16 @@ var (
 		WriteBufferSize: 1024,
 		CheckOrigin:     func(r *http.Request) bool { return true },
 	}
+
+	prompts PromptStore
 )
 
-func NewRouter() *gin.Engine {
+func NewRouter(promptList []string) *gin.Engine {
+	prompts = &MemPromptStore{
+		make(map[string]Prompt),
+		promptList,
+	}
+
 	r := gin.Default()
 	config := cors.DefaultConfig()
 	config.AllowOrigins = []string{"*"}

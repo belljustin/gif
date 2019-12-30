@@ -12,8 +12,7 @@ import (
 )
 
 var (
-	games   = MemGameStore{make(map[string]Game)}
-	prompts = MemPromptStore{make(map[string]Prompt)}
+	games = MemGameStore{make(map[string]Game)}
 )
 
 type GameStore interface {
@@ -123,13 +122,15 @@ type PromptStore interface {
 }
 
 type MemPromptStore struct {
-	store map[string]Prompt
+	store   map[string]Prompt
+	prompts []string
 }
 
 func (s *MemPromptStore) New() (*Prompt, error) {
+	text := s.prompts[rand.Int()%len(s.prompts)]
 	p := Prompt{
 		ID:        uuid.New().String(),
-		Text:      "Welcome to Saint John!",
+		Text:      text,
 		Responses: make(map[string]string),
 		Votes:     make(map[string]int),
 	}
