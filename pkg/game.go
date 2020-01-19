@@ -77,8 +77,7 @@ func (s *MemGameStore) Update(id string, g *Game) error {
 
 func generateGameId(n int) string {
 	rand.Seed(time.Now().UnixNano())
-	chars := []rune("abcdefghijklmnopqrstuvwxyz" +
-		"0123456789")
+	chars := []rune("abcdefghijklmnopqrstuvwxyz")
 	var b strings.Builder
 	for i := 0; i < n; i++ {
 		b.WriteRune(chars[rand.Intn(len(chars))])

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+    "strings"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -77,6 +78,8 @@ func joinGame(ctx *gin.Context) {
 	}
 
 	id := ctx.Param("gameId")
+    id = strings.Trim(id, " ")
+    id = strings.ToLower(id)
 	if id == "" {
 		panic("id should never be null")
 	}
@@ -315,7 +318,7 @@ func next(ctx *gin.Context) {
 		return
 	}
 
-	if len(g.PromptIDs)%5 == 0 {
+	if len(g.PromptIDs)%1 == 0 {
 		g.PublishEnd(g.ID)
 		return
 	}
